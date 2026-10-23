@@ -1,0 +1,38 @@
+name: open-pr
+on:
+  workflow_dispatch:
+    inputs:
+      branch: { required: true, type: string }
+      path: { required: true, type: string }
+      content: { required: false, type: string, default: '' }
+      delete: { required: false, type: string, default: 'false' }
+      title: { required: true, type: string }
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ inputs.branch }}
+          FILE: ${{ inputs.path }}
+          CONTENT: ${{ inputs.content }}
+          DELETE: ${{ inputs.delete }}
+          TITLE: ${{ inputs.title }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          if [ "$DELETE" = "true" ]; then
+            git rm "$FILE"
+          else
+            mkdir -p "$(dirname "$FILE")"
+            printf '%s\n' "$CONTENT" > "$FILE"
+            git add "$FILE"
+          fi
+          git commit -m "$TITLE"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "Seeded by compzi seed-sandbox."
