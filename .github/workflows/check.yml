@@ -1,0 +1,11 @@
+name: check
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fail if a FAIL marker exists
+        run: test ! -f FAIL
